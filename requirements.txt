@@ -1,0 +1,6 @@
+Flask==1.0.2
+Flask-Sockets==0.2.1
+requests
+boto3
+twilio
+
