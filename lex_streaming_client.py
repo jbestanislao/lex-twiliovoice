@@ -213,7 +213,7 @@ class LexClientStreaming:
         return k_signing
 
     def get_response(self):
-        print(self.response)
+        
         if self.response is None:
             raise Exception("Cannot normalize response as there is no response from lex yet. check if add_to_stream() has been called.")
 
