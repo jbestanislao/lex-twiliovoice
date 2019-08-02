@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: The core infrastructure resources used to create an ECS cluster         
-
+             for the lex/twilio voice integration service
 Parameters:
   EnvironmentName:
     Type: String
