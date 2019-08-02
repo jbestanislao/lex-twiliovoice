@@ -1,26 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: The core infrastructure resources used to create a Fargate environment
-             to launch containerized applications in.
+Description: The core infrastructure resources used to create an ECS cluster         
+
 Parameters:
   EnvironmentName:
     Type: String
     Default: lex-twiliovoice-stage
-    Description: A name for the environment that this cloudformation will be part of.
+    Description: Environment name. You will use the same name in the second part of the deployment to refer to the outputs
   CertificateArn:
     Type: String
     Description: ARN of the Amazon Certificate Manager SSL certificate for your domain to use for this service
+
 Mappings:
-  # Hard values for the subnet masks. These masks define
-  # the range of internal IP addresses that can be assigned.
-  # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
-  # There are two subnets which cover the ranges:
-  #
-  # 10.0.0.0 - 10.0.0.255
-  # 10.0.1.0 - 10.0.1.255
-  #
-  # If you need more IP addresses (perhaps you have so many
-  # instances that you run out) then you can customize these
-  # ranges to add more
   SubnetConfig:
     VPC:
       CIDR: '10.0.0.0/16'
@@ -28,19 +18,14 @@ Mappings:
       CIDR: '10.0.0.0/24'
     PublicTwo:
       CIDR: '10.0.1.0/24'
+
 Resources:
-  # VPC in which containers will be networked.
-  # It has two public subnets
-  # We distribute the subnets across the first two available subnets
-  # for the region, for high availability.
   VPC:
     Type: AWS::EC2::VPC
     Properties:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       CidrBlock: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
-
-  # Two public subnets, where containers can have public IP addresses
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
     Properties:
@@ -61,10 +46,6 @@ Resources:
       VpcId: !Ref 'VPC'
       CidrBlock: !FindInMap ['SubnetConfig', 'PublicTwo', 'CIDR']
       MapPublicIpOnLaunch: true
-
-  # Setup networking resources for the public subnets. Containers
-  # in the public subnets have public IP addresses and the routing table
-  # sends network traffic via the internet gateway.
   InternetGateway:
     Type: AWS::EC2::InternetGateway
   GatewayAttachement:
@@ -93,19 +74,8 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnetTwo
       RouteTableId: !Ref PublicRouteTable
-
-  # ECS Resources
   ECSCluster:
     Type: AWS::ECS::Cluster
-
-  # A security group for the containers we will run in Fargate.
-  # Two rules, allowing network traffic from a public facing load
-  # balancer and from other members of the security group.
-  #
-  # Remove any of the following ingress rules that are not needed.
-  # If you want to make direct requests to a container using its
-  # public IP address you'll need to add a security group rule
-  # to allow traffic from all IP addresses.
   FargateContainerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -125,23 +95,12 @@ Resources:
       GroupId: !Ref 'FargateContainerSecurityGroup'
       IpProtocol: -1
       SourceSecurityGroupId: !Ref 'FargateContainerSecurityGroup'
-
-  # Load balancers for getting traffic to containers.
-  # This sample template creates one load balancer:
-  #
-  # - One public load balancer, hosted in public subnets that is accessible
-  #   to the public, and is intended to route traffic to one or more public
-  #   facing services.
-
-  # A public facing load balancer, this is used for accepting traffic from the public
-  # internet and directing it to public facing microservices
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the public facing load balancer
       VpcId: !Ref 'VPC'
       SecurityGroupIngress:
-          # Allow access to ALB from anywhere on the internet
           - CidrIp: 0.0.0.0/0
             IpProtocol: -1
   PublicLoadBalancer:
@@ -152,13 +111,9 @@ Resources:
         - Key: idle_timeout.timeout_seconds
           Value: '30'
       Subnets:
-        # The load balancer is placed into the public subnets, so that traffic
-        # from the internet can reach the load balancer directly via the internet gateway
         - !Ref PublicSubnetOne
         - !Ref PublicSubnetTwo
       SecurityGroups: [!Ref 'PublicLoadBalancerSG']
-  # A dummy target group is used to setup the ALB to just drop traffic
-  # initially, before any real service target groups have been added.
   DummyTargetGroupPublic:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -167,7 +122,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Name: !Join ['-', [!Ref 'EnvironmentName', 'drop-1']]
+      Name: !Join ['-', [!Ref 'EnvironmentName', 'temp']]
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 2
@@ -196,10 +151,8 @@ Resources:
       Protocol: HTTPS
       Certificates:
         - CertificateArn: !Ref 'CertificateArn'
-  # This is an IAM role which authorizes ECS to manage resources on your
-  # account on your behalf, such as updating your load balancer with the
-  # details of where your containers are, so that traffic can reach your
-  # containers.
+
+  # IAM Roles
   ECSRole:
     Type: AWS::IAM::Role
     Properties:
@@ -216,8 +169,6 @@ Resources:
           Statement:
           - Effect: Allow
             Action:
-              # Rules which allow ECS to attach network interfaces to instances
-              # on your behalf in order for awsvpc networking mode to work right
               - 'ec2:AttachNetworkInterface'
               - 'ec2:CreateNetworkInterface'
               - 'ec2:CreateNetworkInterfacePermission'
@@ -225,17 +176,12 @@ Resources:
               - 'ec2:DeleteNetworkInterfacePermission'
               - 'ec2:Describe*'
               - 'ec2:DetachNetworkInterface'
-
-              # Rules which allow ECS to update load balancers on your behalf
-              # with the information sabout how to send traffic to your containers
               - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
               - 'elasticloadbalancing:DeregisterTargets'
               - 'elasticloadbalancing:Describe*'
               - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
               - 'elasticloadbalancing:RegisterTargets'
             Resource: '*'
-
-  # This is a role which is used by the ECS tasks themselves.
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -252,20 +198,17 @@ Resources:
             Statement:
             - Effect: Allow
               Action:
-                # Allow the ECS Tasks to download images from ECR
+                # ECR
                 - 'ecr:GetAuthorizationToken'
                 - 'ecr:BatchCheckLayerAvailability'
                 - 'ecr:GetDownloadUrlForLayer'
                 - 'ecr:BatchGetImage'
 
-                # Allow the ECS tasks to upload logs to CloudWatch
+                # CW
                 - 'logs:CreateLogStream'
                 - 'logs:PutLogEvents'
               Resource: '*'
 
-# These are the values output by the CloudFormation template. Be careful
-# about changing any of them, because of them are exported with specific
-# names so that the other task related CF templates can use them.
 Outputs:
   ClusterName:
     Description: The name of the ECS cluster
@@ -273,7 +216,7 @@ Outputs:
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'ClusterName' ] ]
   ExternalUrl:
-    Description: The url of the external load balancer
+    Description: The url of the ALB
     Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName']]
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'ExternalUrl' ] ]
@@ -283,7 +226,7 @@ Outputs:
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'ECSRole' ] ]
   ECSTaskExecutionRole:
-    Description: The ARN of the ECS role
+    Description: The ARN of the ECS Task execurtion role
     Value: !GetAtt 'ECSTaskExecutionRole.Arn'
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'ECSTaskExecutionRole' ] ]
@@ -303,17 +246,17 @@ Outputs:
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'VPCId' ] ]
   PublicSubnetOne:
-    Description: Public subnet one
+    Description: Public subnet 1
     Value: !Ref 'PublicSubnetOne'
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'PublicSubnetOne' ] ]
   PublicSubnetTwo:
-    Description: Public subnet two
+    Description: Public subnet 2
     Value: !Ref 'PublicSubnetTwo'
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'PublicSubnetTwo' ] ]
   FargateContainerSecurityGroup:
-    Description: A security group used to allow Fargate containers to receive traffic
+    Description: A security group used to allow  containers to receive traffic
     Value: !Ref 'FargateContainerSecurityGroup'
     Export:
       Name: !Join [ ':', [ !Ref 'EnvironmentName', 'FargateContainerSecurityGroup' ] ]
