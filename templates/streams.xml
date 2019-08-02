@@ -2,7 +2,7 @@
 <Response>
   <Say>You will be interacting with Lex bot in 3, 2, 1. Go.</Say>
   <Start>
-    <Stream url="wss://idealaya.com/"></Stream>
+    <Stream url="wss://<url>/"></Stream>
   </Start>
   <Pause length="40"/>
 </Response>
