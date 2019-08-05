@@ -1,2 +1,2 @@
 # lex-twiliovoice
-Integration of Amazon Lex with Twilio Voice Stream (Deployed on AWS Fargate)
+Using Amazon Lex as a conversational interface with Twilio Media Streams
