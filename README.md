@@ -164,7 +164,7 @@ launching the service on top of the core infrastructure. This allows us
 to reference the stack outputs from this
 deployment.
 
-![https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=lex-twiliovoice-core&templateURL=https://aws-ml-blog.s3.amazonaws.com/artifacts/lex-twilio/coreinfra_cfn.yml](./media/image5.png)
+[!(./media/image5.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=lex-twiliovoice-core&templateURL=https://aws-ml-blog.s3.amazonaws.com/artifacts/lex-twilio/coreinfra_cfn.yml)
 
 
 Once the stack creation is complete, from the “outputs” tab, record the
@@ -252,7 +252,7 @@ parameters. Make sure to use the same “EnvironmentName” from the
 previous stack deployment since we are referring to the outputs of that
 deployment.
 
-![https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=lex-twiliovoice-service&templateURL=https://aws-ml-blog.s3.amazonaws.com/artifacts/lex-twilio/serviceinfra_cfn.yml](./media/image5.png)
+[!(./media/image5.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=lex-twiliovoice-service&templateURL=https://aws-ml-blog.s3.amazonaws.com/artifacts/lex-twilio/serviceinfra_cfn.yml)
 
 Once the deployment is complete, we can test the service. However,
 before we do that, make sure to point your custom DNS to the Application
