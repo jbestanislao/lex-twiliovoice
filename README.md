@@ -110,13 +110,13 @@ For this, in the AWS Console, go to IAM-\>Users-\>Add user
 Provide a user name, select “Programmatic access” Access type, then
 click on “Next: Permissions”
 
-![](./media/image2.tif)
+![](./media/image2.png)
 
 Using the “Attach existing policies directly” option, filter for Amazon
 Lex policies and select AmazonLexReadOnly and AmazonLexRunBotsOnly
 policies.
 
-![](./media/image3.tif)
+![](./media/image3.png)
 
 Click “Next: Tags”, “Next: Review”, and “Create User” in the pages that
 follow to create the user. Record the access key ID and the secret
@@ -318,7 +318,7 @@ from external applications.
 
 ngrok http 8080
 
-![](./media/image8.tif)
+![](./media/image8.png)
 
 Next, configure the “Stream” element inside the templates/streams.xml
 file with the correct ngrok url.
@@ -356,7 +356,7 @@ python server.py
 To test, configure the Webhook field under “Voice & Fax” in the Twilio
 console with the correct url (http://\<url\>/twiml) as shown below.
 
-![](./media/image9.tif)
+![](./media/image9.png)
 
 Initiate a call to the Twilio phone number from a verified phone. Once
 connected, you hear the prompt “You will be interacting with Lex bot in
