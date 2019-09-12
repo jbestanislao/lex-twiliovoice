@@ -1,8 +1,7 @@
 Businesses use the Twilio platform to build the forms of communication
 they need to best serve their customers: whether it’s fully automating
 food orders of a restaurant with a conversational IVR or building the
-next generation advanced contact center. With the launch of (hyperlink
-to Twilio blog post) Media Streams, Twilio is opening up their Voice
+next generation advanced contact center. With the launch of  [Media Streams](https://www.twilio.com/media-streams), Twilio is opening up their Voice
 platform by providing businesses access to the raw audio stream of their
 phone calls in real time.
 
