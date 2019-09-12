@@ -264,16 +264,6 @@ infrastructure stack deployment (“ExternalUrl” key from output). In the
 type select “A - IPv4 address”, select “Yes” for Alias field, select the
 Alias target as the ALB Url, and click “Create”.
 
-# 
-
-# 
-
-# 
-
-# 
-
-#   
-
 # Step 4: Test the deployed service
 
 You can verify the deployment by navigating to the [Amazon ECS
